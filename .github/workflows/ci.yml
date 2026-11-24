@@ -39,3 +39,18 @@ jobs:
             -e INTERNAL_SERVICE_TOKEN="$(openssl rand -hex 32)" \
             gr-notification-microservice:ci
           curl --retry 15 --retry-delay 2 --retry-all-errors -fsS http://localhost:4600/health
+
+  release:
+    name: Build y desplegar
+    needs: [build-and-check, docker-smoke-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
+    uses: GestionResidencialPoli/gr-infra/.github/workflows/build-push.yml@main
+    with:
+      service-name: gr-notification-microservice
+      compose-service: notification-microservice
+    secrets:
+      JENKINS_WEBHOOK_URL: ${{ secrets.JENKINS_WEBHOOK_URL }}
+      JENKINS_WEBHOOK_TOKEN: ${{ secrets.JENKINS_WEBHOOK_TOKEN }}
